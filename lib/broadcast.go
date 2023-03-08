@@ -56,6 +56,10 @@ func NewBroadcastHandler(n *maelstrom.Node) maelstrom.HandlerFunc {
 		memMtx.Lock()
 		memory[val] = struct{}{}
 		memMtx.Unlock()
+		bcastBody := ReplyBody{
+			"type":    "broadcast",
+			"message": val,
+		}
 		peersMtx.Lock()
 		// This protects us in case we got a broadcast message before a topology update
 		// If the broadcast message comes in before the init message...welp.
@@ -66,13 +70,14 @@ func NewBroadcastHandler(n *maelstrom.Node) maelstrom.HandlerFunc {
 		peersMtx.Unlock()
 		for _, sendTo := range recipients {
 			if sendTo == n.ID() {
-				log.Printf("don't send to yourself, that's silly.")
 				continue
 			}
-			// Send() does return errors but only on json marshaling and if we're here
-			// we've already successfully unmarshaled it.
+			if sendTo == msg.Src {
+				// don't broadcast back to the source
+				continue
+			}
 			log.Printf("sending to %s", sendTo)
-			n.Send(sendTo, msg)
+			n.Send(sendTo, bcastBody)
 		}
 		n.Reply(msg, bcastOK)
 		return nil
