@@ -24,7 +24,6 @@ var (
 	errNoTopObj  = errors.New("no topology object in message")
 	errBadTopObj = errors.New("malformed topology object in message")
 	errNoPeerObj = errors.New("no peer object in topology message")
-	errNoPeers   = errors.New("no peers specified in topology message")
 	errBadPeers  = errors.New("malformed peer object in topology message")
 )
 
@@ -117,9 +116,6 @@ func extractPeersFromTopology(id string, byt json.RawMessage) ([]string, error) 
 	peerArray, ok := peerObj.([]any)
 	if !ok {
 		return nil, errBadPeers
-	}
-	if len(peerArray) == 0 {
-		return nil, errNoPeers
 	}
 	newPeers := make([]string, 0, len(peerArray))
 	for _, val := range peerArray {
